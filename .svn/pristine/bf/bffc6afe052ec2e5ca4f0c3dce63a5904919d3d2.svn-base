@@ -1,0 +1,177 @@
+package de.uniwue.jpp.ook;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.Optional;
+import java.util.Scanner;
+
+public class MyShell implements Shell {
+    private static Util util;
+    private static InputStream inputS;
+    private static OutputStream outputS;
+    private static InputStream readInp;
+    private static MyInterpreter interpreter;
+
+    public static Shell create(Ook handle, InputStream input, OutputStream output, InputStream readInput) {
+        if (readInput == null || output == null || input == null || handle == null) {
+
+            throw new NullPointerException();
+        }
+        Shell shell = new MyShell();
+        inputS = input;
+        outputS = output;
+        util = handle.createUtil();
+        readInp = readInput;
+        //interpreter = handle.createInterpreter(input, output);
+        return shell;
+    }
+
+    @Override
+    public Optional<Instruction> parseLine(String line) {
+        return util.getInstruction(line);
+    }
+
+    @Override
+    public void prepareUpdate(Instruction instruction) {
+        String reading = "Reading: ";
+        String writing = "Writing: ";
+        String nichtsundwiedernichts = instruction + "\n";
+        if (instruction.equals(Instruction.Read)) {
+            try {
+                outputS.write(reading.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (instruction.equals(Instruction.Write)) {
+            try {
+                outputS.write(writing.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            try {
+                outputS.write(nichtsundwiedernichts.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Override
+    public void completeUpdate(Instruction instruction) {
+        String garnichts = "\n";
+        if (instruction.equals(Instruction.Write)) {
+            try {
+                outputS.write(garnichts.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (instruction.equals(Instruction.Read)) {
+            ///Rufe das nächste Zeichen vom Datenstrom auf
+            try {
+                if ('\n' != inputS.read()) {
+                    outputS.write("Illegal Input: Insert only one character!\n".getBytes());
+                }
+
+            } catch (IOException e) {
+                try {
+                    outputS.write("Illegal Input: Insert only one character!\n".getBytes());
+                } catch (IOException ex) {
+                }
+            }
+        }
+    }
+
+    @Override
+    public void run() {
+        if(interpreter == null){
+            return;
+        }
+
+
+        interpreter.read();
+        try {
+            outputS.write("--------------------------".getBytes());
+            outputS.write("  Interactive Ook! Shell  ".getBytes());
+            outputS.write("--------------------------".getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+        Scanner sc = new Scanner(inputS);
+        String inputScanner;
+        while (sc.hasNext()) {
+            inputScanner = sc.nextLine();
+            switch (inputScanner) {
+                case "Bananas" -> {
+                    try {
+                        outputS.write("Yippee!\n".getBytes());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                case "Monkey" -> {
+                    try {
+                        outputS.write("Ouch!\n".getBytes());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return;
+                }
+                default -> {
+                    Optional<Instruction> instruction = util.getInstruction(inputScanner);
+                    if (instruction.isEmpty()) {
+                        try {
+                            outputS.write(("Invalid instruction: " + inputScanner + "\n").getBytes());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        Instruction instruction1 = instruction.orElse(null);
+                        interpreter.loadInstruction(instruction1);
+                        prepareUpdate(instruction1);
+                        interpreter.update();
+                        completeUpdate(instruction1);
+
+                    }
+
+                }
+            }
+        }
+
+        /*
+        interpreter.read();
+
+        outputS.write("--------------------------".getBytes());
+        outputS.write("  Interactive Ook! Shell  ".getBytes());
+        outputS.write("--------------------------".getBytes());
+
+        Scanner sc = new Scanner(inputS);
+        String inputScanner;
+        while(sc.hasNext()){
+            inputScanner = sc.nextLine();
+            switch(inputScanner){
+                case "Bananas" -> outputS.write("Yippee!\n".getBytes());
+                case "Monkey" -> {
+                    outputS.write("Ouch!\n".getBytes());
+                    return;
+                }
+                default -> {
+                    Optional<Instruction> instruction = util.getInstruction(inputScanner);
+                    if (instruction.isEmpty()){
+                        outputS.write(("Invalid instruction: " + inputScanner + "\n").getBytes());
+                    }else{
+                        Instruction instruction1 = instruction.orElse(null);
+                        interpreter.loadInstruction(instruction1);
+                        prepareUpdate(instruction1);
+                        interpreter.update();
+                        completeUpdate(instruction1);
+
+                    }
+
+                }
+                */
+    }
+}
+

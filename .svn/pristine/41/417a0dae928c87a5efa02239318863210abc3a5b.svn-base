@@ -1,0 +1,177 @@
+package de.uniwue.jpp.ook;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+public class MyInterpreter implements Interpreter {
+
+    private Supplier<Integer> onRead;
+    private Consumer<Integer> onWrite;
+    private ArrayList<Instruction> instructionList = new ArrayList<Instruction>();
+    private List<Integer> memory = new ArrayList<Integer>();
+    private int memoryPointer;
+    private int instructionPointer;
+
+
+    public MyInterpreter(Supplier<Integer> onRead, Consumer<Integer> onWrite) {
+        this.onRead = onRead;
+        this.onWrite = onWrite;
+        memory.add(0);
+    }
+
+    public static Interpreter create(Supplier<Integer> onRead, Consumer<Integer> onWrite) {
+        if (onRead == null || onWrite == null) {
+            throw new NullPointerException();
+        }
+        MyInterpreter interpreter = new MyInterpreter(onRead, onWrite);
+        return interpreter;
+    }
+
+    @Override
+    public void loadInstruction(Instruction instruction) {
+        if (instruction == null) {
+            throw new NullPointerException();
+        }
+        instructionList.add(instruction);
+    }
+
+    @Override
+    public void loadInstructions(List<Instruction> instructions) {
+        for (Instruction i : instructions) {
+            loadInstruction(i);
+        }
+    }
+
+    @Override
+    public List<Instruction> getInstructions() {
+        return Collections.unmodifiableList(instructionList);
+    }
+
+    @Override
+    public List<Integer> getMemory() {
+        /// Gar kein Plan was man hier machen muss
+        return Collections.unmodifiableList(memory);
+    }
+
+    @Override
+    public int getMemoryPointer() {
+        return memoryPointer;
+    }
+
+    @Override
+    public int getInstructionPointer() {
+        return instructionPointer;
+    }
+
+    @Override
+    public boolean reachedEnd() {
+        if (instructionList.size() <= getInstructionPointer()) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void update() {
+        if (reachedEnd()) {
+            throw new ExecutionException("Reached end of instruction list!");
+        }
+        Instruction aktuelleInstruction = instructionList.get(instructionPointer);
+        switch (aktuelleInstruction) {
+            case Inc -> increment();
+            case Dec -> decrement();
+            case End -> end();
+            case Read -> read();
+            case Loop -> loop();
+            case Write -> write();
+            case PtrDec -> pointerDecrement();
+            case PtrInc -> pointerIncrement();
+        }
+    }
+
+    @Override
+    public void increment() {
+        memory.set(memoryPointer, memory.get(memoryPointer) + 1);
+        instructionPointer = instructionPointer + 1;
+    }
+
+    @Override
+    public void decrement() {
+        memory.set(memoryPointer, memory.get(memoryPointer) - 1);
+        instructionPointer = instructionPointer + 1;
+    }
+
+    @Override
+    public void pointerIncrement() {
+        // Wenn der Pointer nicht null ist
+        if (memoryPointer < memory.size() - 1) {
+            memoryPointer = memoryPointer + 1;
+        } else {
+            memory.add(0);
+            memoryPointer = memoryPointer + 1;
+        }
+        instructionPointer = instructionPointer + 1;
+    }
+
+    @Override
+    public void pointerDecrement() {
+        if (memoryPointer <= 0) {
+            throw new ExecutionException("Requested invalid memory address!");
+        } else {
+            memoryPointer = memoryPointer - 1;
+        }
+        instructionPointer = instructionPointer + 1;
+
+    }
+
+    @Override
+    public void read() {
+        memory.set(memoryPointer, onRead.get());
+        instructionPointer = instructionPointer + 1;
+    }
+
+    @Override
+    public void write() {
+        onWrite.accept(memory.get(memoryPointer));
+        instructionPointer = instructionPointer + 1;
+    }
+
+    @Override
+    public void loop() {
+        instructionPointer = instructionPointer + 1;
+    }
+
+    @Override
+    public void end() {
+        boolean loopStartIsFound = false;
+        int positionInstruction = instructionPointer;
+        int anzahlSchleifen = 1;
+        if (memory.get(memoryPointer) == 0) {
+            instructionPointer = instructionPointer + 1;
+            return;
+        }
+        if (!reachedEnd()) {
+            while (!loopStartIsFound) {
+                if (positionInstruction < 0) {
+                    throw new ExecutionException("Closing loop without beginning!");
+                }
+                if (instructionList.get(positionInstruction).equals(Instruction.Loop) && anzahlSchleifen == 2) {
+                    instructionPointer = positionInstruction;
+                    loopStartIsFound = true;
+                }
+                if (instructionList.get(positionInstruction).equals(Instruction.Loop)) {
+                    anzahlSchleifen = anzahlSchleifen - 1;
+                }
+                if (instructionList.get(positionInstruction).equals(Instruction.End)) {
+                    anzahlSchleifen = anzahlSchleifen + 1;
+                }
+                positionInstruction = positionInstruction - 1;
+            }
+        }
+
+
+    }
+}

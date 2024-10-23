@@ -1,0 +1,85 @@
+package de.uniwue.jpp.ook;
+
+import java.util.List;
+
+public class MyInterpreter implements Interpreter{
+    @Override
+    public void loadInstruction(Instruction instruction) {
+
+    }
+
+    @Override
+    public void loadInstructions(List<Instruction> instructions) {
+
+    }
+
+    @Override
+    public List<Instruction> getInstructions() {
+        return null;
+    }
+
+    @Override
+    public List<Integer> getMemory() {
+        return null;
+    }
+
+    @Override
+    public int getMemoryPointer() {
+        return 0;
+    }
+
+    @Override
+    public int getInstructionPointer() {
+        return 0;
+    }
+
+    @Override
+    public boolean reachedEnd() {
+        return false;
+    }
+
+    @Override
+    public void update() {
+
+    }
+
+    @Override
+    public void increment() {
+
+    }
+
+    @Override
+    public void decrement() {
+
+    }
+
+    @Override
+    public void pointerIncrement() {
+
+    }
+
+    @Override
+    public void pointerDecrement() {
+
+    }
+
+    @Override
+    public void read() {
+
+    }
+
+    @Override
+    public void write() {
+
+    }
+
+    @Override
+    public void loop() {
+
+    }
+
+    @Override
+    public void end() {
+
+    }
+}

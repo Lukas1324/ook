@@ -1,0 +1,58 @@
+package de.uniwue.jpp.ook;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.Optional;
+
+public class MyShell implements Shell {
+    private static Util util;
+    private static InputStream inputS;
+    private static OutputStream outputS;
+    private static InputStream readInp;
+    private static MyInterpreter interpreter;
+
+    public static Shell create(Ook handle, InputStream input, OutputStream output, InputStream readInput) {
+        if (readInput == null || output == null || input == null || handle == null){
+
+            throw new NullPointerException();
+        }
+        Shell shell = new MyShell();
+        inputS = input;
+        outputS = output;
+        util = handle.createUtil();
+        readInp = readInput;
+        //interpreter = handle.createInterpreter(input, output);
+        return shell;
+    }
+    @Override
+    public Optional<Instruction> parseLine(String line) {
+        return util.getInstruction(line);
+    }
+
+    @Override
+    public void prepareUpdate(Instruction instruction) {
+        if(instruction.equals(Instruction.Read)){
+            System.out.print("Reading: ");
+        } else if (instruction.equals(Instruction.Write)) {
+            System.out.print("Writing: ");
+        }else{
+            System.out.println(instruction);
+        }
+    }
+
+    @Override
+    public void completeUpdate(Instruction instruction) {
+        if(instruction.equals(Instruction.Write)){
+            System.out.println();
+        } else if (instruction.equals(Instruction.Read)) {
+            ///Rufe das nächste Zeichen vom Datenstrom auf
+        }
+    }
+
+    @Override
+    public void run() {
+        interpreter.read();
+
+    }
+}

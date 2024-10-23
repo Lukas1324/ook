@@ -1,0 +1,64 @@
+package de.uniwue.jpp.ook;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MyParser implements Parser{
+    private Util util;
+
+    public MyParser(Util util){
+        this.util = util;
+    }
+    public static Parser create(Ook handle){
+        Util util = handle.createUtil();
+        return new MyParser(util);
+    }
+    @Override
+    public List<Instruction> parse(String program) {
+        if(isValid(program) == false){
+            throw new RuntimeException();
+        }else{
+            return asInstructions(asSymbols(program));
+        }
+    }
+
+    @Override
+    public boolean isValid(String program) {
+        program = program.replaceAll("\\w", "");
+        for(int i = 0; i<program.length(); i = i + 4){
+            if(program.charAt(i) != 'O' &&
+               program.charAt(i+1) != 'o'&&
+               program.charAt(i+2) != 'k'&& !(
+               program.charAt(i+3) == '.'||
+               program.charAt(i+3) == '!'||
+               (program.charAt(i+3) == '?'))) {
+                return false;
+            }
+        }
+        /// Modulo 8 machen
+        /// Fall ? ?
+        return true;
+    }
+
+    @Override
+    public List<Symbol> asSymbols(String program) {
+        ArrayList<Symbol> symbolList = new ArrayList<Symbol>();
+        if(isValid(program) == false){
+            throw new IllegalArgumentException("Program is not valid!");
+        }
+        for (int i = 0; i<program.length(); i = i +4){
+            symbolList.add(util.forToken(program.substring(i, i+3)));
+        }
+
+        return symbolList;
+    }
+
+    @Override
+    public List<Instruction> asInstructions(List<Symbol> symbols) {
+        ArrayList<Instruction> instructionList = new ArrayList<Instruction>();
+        for(int i = 0; i<symbols.size(); i = i + 2){
+            instructionList.add(util.forSymbols(symbols.get(i),symbols.get(i+1)));
+        }
+        return instructionList;
+    }
+}

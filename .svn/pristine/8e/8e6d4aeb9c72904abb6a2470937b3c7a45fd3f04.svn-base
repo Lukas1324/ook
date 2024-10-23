@@ -1,0 +1,33 @@
+package de.uniwue.jpp.ook;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+public class MyExecutor implements Executor{
+
+    static Util util;
+    private static Parser parser;
+    private static Interpreter interpreter;
+
+    public static Executor create(Ook handle){
+        //MyUtil, MyPaser, MyInterpreter
+
+        MyExecutor xyz = new MyExecutor();
+        util = handle.createUtil();
+        parser = handle.createParser();
+        //interpreter = handle.createInterpreter(Supplier<Integer>, Consumer<Integer>);
+        return xyz;
+    }
+    @Override
+    public void execute(Path program, Path input, Path output) throws IOException {
+        //Files.newInputStream
+
+    }
+
+    @Override
+    public void execute(String[] args) throws IOException {
+
+    }
+}
